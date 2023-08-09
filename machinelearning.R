@@ -2,7 +2,7 @@ library(tidyr)
 library(dplyr)
 library(factoextra)
 
-master_df <- read.csv("C:/Users/james/Desktop/R Stuff/master.csv") %>%
+master_df <- read.csv("C:/Users/james/Desktop/honours/master.csv") %>%
   mutate(PHQ_classification = ifelse(PHQ_classification == "Subclinical", 0, 1)) %>%
   select(-PIN) %>%
   mutate(across(everything(), ~ replace_na(., median(., na.rm = TRUE)))) # Replacing all n/a values with the column median
@@ -42,6 +42,7 @@ dbscan_res
 plot(data_scale, col = dbscan_res$cluster+1, main = "DBSCAN")
 
 # Fuzzy clustering
+
 library(ppclust)
 
 fuzzy_clusters <- fcm(data_scale, centers = 3)
@@ -53,6 +54,7 @@ factoextra::fviz_cluster(list(data=fuzzy_clusters, cluster = fuzzy_clusters$clus
                          ggtheme = theme_classic())
 
 # PCA Biplot
+
 pca <- prcomp(data_scale)
 fviz_pca_biplot(pca,
                 label="var",
