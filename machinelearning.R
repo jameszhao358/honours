@@ -6,6 +6,7 @@ library(factoextra)
 library(dbscan)
 library(ppclust)
 library(e1071)
+library(ggplot2)
 
 # Select significant variables 
 
@@ -50,6 +51,15 @@ plot(data_scale, col = dbscan_res$cluster+1, main = "DBSCAN")
 # Fuzzy clustering
 
 fuzzy_clusters <- fcm(data, centers = 3)
+
+fuzzy_clusters <- as.numeric(fuzzy_clusters)
+
+factoextra::fviz_cluster(list(data = data_scale, cluster = fuzzy_clusters$cluster),  
+                         geom = "point", 
+                         ellipse = FALSE, 
+                         show.clust.cent = FALSE,
+                         palette = "jco", 
+                         ggtheme = theme_classic())
 
 factoextra::fviz_cluster(list(data = fuzzy_clusters, cluster = fuzzy_clusters$cluster),  
                          geom = "point", 
