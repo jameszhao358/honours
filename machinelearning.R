@@ -6,7 +6,7 @@ library(factoextra)
 library(dbscan)
 library(ppclust)
 library(e1071)
-library(ggplot2)
+library(caret)
 
 # Select significant variables 
 
@@ -21,6 +21,9 @@ data <- features %>%
   select(-PHQ_classification)
 
 data_scale <- as.data.frame(scale(data))
+
+data_scale <- data_scale %>%
+  mutate(PHQ9 = features$PHQ_classification)
 
 data <- dist(data_scale)
 
@@ -50,18 +53,9 @@ plot(data_scale, col = dbscan_res$cluster+1, main = "DBSCAN")
 
 # Fuzzy clustering
 
-fuzzy_clusters <- fcm(data, centers = 3)
-
-fuzzy_clusters <- as.numeric(fuzzy_clusters)
+fuzzy_clusters <- fcm(data_scale, centers = 3)
 
 factoextra::fviz_cluster(list(data = data_scale, cluster = fuzzy_clusters$cluster),  
-                         geom = "point", 
-                         ellipse = FALSE, 
-                         show.clust.cent = FALSE,
-                         palette = "jco", 
-                         ggtheme = theme_classic())
-
-factoextra::fviz_cluster(list(data = fuzzy_clusters, cluster = fuzzy_clusters$cluster),  
                          geom = "point", 
                          ellipse = FALSE, 
                          show.clust.cent = FALSE,
@@ -74,3 +68,41 @@ pca <- prcomp(data_scale)
 fviz_pca_biplot(pca,
                 label="var",
                 habillage = features$PHQ_classification)
+
+# Random Forest Model -----------------------------------------------------
+
+set.seed(123)
+
+train_index <- sample(1:nrow(data_scale), 0.9 * nrow(data_scale))
+data_train <- data_scale[train_index, ]
+data_test <- data_scale[-train_index, ]
+
+param_grid <- expand.grid(
+  mtry = c(2, 4, 6),
+  splitrule = c("gini", "extratrees"),
+  min.node.size = c(1, 5, 10, 15, 20)
+)
+
+ctrl <- trainControl(
+  method = "cv",           
+  number = 10,              
+  search = "grid"
+)
+  
+rf_model <- train(
+  as.factor(PHQ9) ~ .,
+  data = data_train,
+  method = "ranger",
+  trControl = ctrl,         
+  tuneGrid = param_grid
+)
+
+print(rf_model)
+# The final values used for the model were mtry = 2, splitrule = extratrees and min.node.size = 5.
+# Best accuracy = 0.701
+
+
+
+
+
+
