@@ -7,6 +7,7 @@ library(dbscan)
 library(ppclust)
 library(e1071)
 library(caret)
+library(ranger)
 
 # Select significant variables 
 
@@ -62,6 +63,10 @@ factoextra::fviz_cluster(list(data = data_scale, cluster = fuzzy_clusters$cluste
                          palette = "jco", 
                          ggtheme = theme_classic())
 
+# Adding cluster assignments to data_scale
+data_scale <- data_scale %>%
+  mutate(fuzzy_cluster = fuzzy_clusters$cluster)
+
 # PCA Biplot
 
 pca <- prcomp(data_scale)
@@ -89,6 +94,7 @@ ctrl <- trainControl(
   search = "grid"
 )
   
+set.seed(123)
 rf_model <- train(
   as.factor(PHQ9) ~ .,
   data = data_train,
@@ -98,10 +104,20 @@ rf_model <- train(
 )
 
 print(rf_model)
-# The final values used for the model were mtry = 6, splitrule = gini and min.node.size = 10.
-# Best accuracy = 0.732
+# The final values used for the model were mtry = 2, splitrule = extratrees and min.node.size = 20.
+# Best accuracy before cluster assignment = 0.732 (when min.node.size = 15)
+# Best accuracy after cluster assignment = 0.721
 
-predictions <- predict(rf_model, newdata = data_test)
+best_rf <- ranger(
+  formula = as.factor(PHQ9) ~ .,
+  data = data_train,
+  mtry = 2,
+  splitrule = "extratrees",
+  min.node.size = 20
+)
+
+ranger_predict <- predict(best_rf, data = data_test)
+predictions <- ranger_predict$predictions
 true_labels = data_test$PHQ
 
 confusion_matrix <- table(True = true_labels, Predicted = predictions)
@@ -109,15 +125,19 @@ print(confusion_matrix)
 
 accuracy <- (confusion_matrix[1, 1] + confusion_matrix[2, 2]) / sum(confusion_matrix)
 # Accuracy: 0.7419355
+# Accuracy after cluster assignment: 0.7097
 
 precision <- confusion_matrix[1, 1] / (confusion_matrix[1, 1] + confusion_matrix[2, 1])
 # Precision: 0.6428571
+# Precision after cluster assignment: 0.615
 
 recall <- confusion_matrix[1, 1] / (confusion_matrix[1, 1] + confusion_matrix[1, 2])
 # Recall (Sensitivity): 0.75 
+# Recall after cluster assignment: 0.667
 
 f1_score <- 2 * (precision * recall) / (precision + recall)
 # F1-Score: 0.6923077 
+# F1-score after cluster assignment: 0.64
 
 
 
