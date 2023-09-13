@@ -98,8 +98,29 @@ rf_model <- train(
 )
 
 print(rf_model)
-# The final values used for the model were mtry = 2, splitrule = extratrees and min.node.size = 5.
-# Best accuracy = 0.701
+# The final values used for the model were mtry = 6, splitrule = gini and min.node.size = 10.
+# Best accuracy = 0.732
+
+predictions <- predict(rf_model, newdata = data_test)
+true_labels = data_test$PHQ
+
+confusion_matrix <- table(True = true_labels, Predicted = predictions)
+print(confusion_matrix)
+
+accuracy <- (confusion_matrix[1, 1] + confusion_matrix[2, 2]) / sum(confusion_matrix)
+# Accuracy: 0.7419355
+
+precision <- confusion_matrix[1, 1] / (confusion_matrix[1, 1] + confusion_matrix[2, 1])
+# Precision: 0.6428571
+
+recall <- confusion_matrix[1, 1] / (confusion_matrix[1, 1] + confusion_matrix[1, 2])
+# Recall (Sensitivity): 0.75 
+
+f1_score <- 2 * (precision * recall) / (precision + recall)
+# F1-Score: 0.6923077 
+
+
+
 
 
 
