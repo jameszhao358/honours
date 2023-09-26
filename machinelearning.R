@@ -130,6 +130,7 @@ true_labels = as.factor(data_test$PHQ)
 confusion_matrix <- confusionMatrix(predictions, true_labels)
 print(confusion_matrix)
 # Accuracy 0.7742, sensitivity 0.8333, specificity 0.7368
+# New metrics: accuracy 0.6774, sensitivity 0.6667, specificity 0.6842
 
 # Rpart -------------------------------------------------------------------
 
@@ -154,7 +155,7 @@ rpart_model <- train(
 )
 
 print(rpart_model)
-# Best complexity = 0.02, accuracy = 0.70
+# Best complexity = 0.3, accuracy = 0.70
 
 best_rpart <- rpart_model$finalModel 
 predictions <- predict(best_rpart, newdata = data_test)
@@ -171,7 +172,7 @@ rpart_predictions <- as.factor(rpart_predictions)
 
 confusion_matrix <- confusionMatrix(rpart_predictions, true_labels)
 print(confusion_matrix)
-# Accuracy 0.7097, sensitivity 0.6667, specificity 0.7368
+# Accuracy 0.6774, sensitivity 0.6667, specificity 0.6842
 
 # KNN ---------------------------------------------------------------------
 
@@ -228,6 +229,6 @@ xgb_model <- train(
 print(xgb_model)
 
 xgb_predictions <- predict(xgb_model, newdata = data_test)
-confusion_matrix <- confusionMatrix(knn_predictions, true_labels)
+confusion_matrix <- confusionMatrix(xgb_predictions, true_labels)
 print(confusion_matrix)
-# Accuracy = 0.6774, Sensitivity 0.75, specificity 0.63 
+# Accuracy = 0.7742, Sensitivity 0.6667, specificity 0.8421

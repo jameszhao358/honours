@@ -13,6 +13,7 @@ PHQ9_df <- read.csv("C:/Users/james/Desktop/honours/processed_data/PHQ9_df.csv")
 
 overall_df <- complete_df_2 %>%
   filter(grepl("press|release", event_type) & !grepl('mouse', event_converted)) %>%
+  group_by(PIN, stage) %>%
   mutate(
     key_hold_time = ifelse(event_type == "key release", timestamp - lag(timestamp), NA),
     flight_time = ifelse(event_type == "key press", timestamp - lag(timestamp, n = 2), NA)
@@ -28,6 +29,7 @@ overall_summary <- overall_df %>%
 
 transferq_df <- complete_df_2 %>%
   filter(stage == "transfer_q" & grepl("press|release", event_type) & !grepl('mouse', event_converted)) %>%
+  group_by(PIN) %>%
   mutate(
     key_hold_time = ifelse(event_type == "key release", timestamp - lag(timestamp), NA),
     flight_time = ifelse(event_type == "key press", timestamp - lag(timestamp, n = 2), NA),
@@ -51,9 +53,11 @@ transferq_summary <- transferq_df %>%
 
 VVR_df <- complete_df_2 %>%
   filter(stage == "VVR1" & grepl("leftarrow|rightarrow", event_converted)) %>% 
+  group_by(PIN) %>%
   mutate(key_hold_time = ifelse(event_type == "key release", timestamp - lag(timestamp), NA),
          flight_time = ifelse(event_type == "key press", timestamp - lag(timestamp, n = 2), NA))
 
+# Calculating number of blocks for each patient by no. of times "submit" was pressed
 VVR_blocks <- complete_df_2 %>%
   filter(stage == "VVR1") %>%
   group_by(PIN) %>%

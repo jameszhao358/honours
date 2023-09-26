@@ -13,7 +13,7 @@ wilcox.test(overall_kht ~ PHQ_classification, data = features)
 # p-value = 0.003328
 
 wilcox.test(overall_ft ~ PHQ_classification, data = features)
-# p-value = 0.1653
+# p-value = 0.1112
 
 # Transfer_q KHT and FT ---------------------------------------------------
 
@@ -21,15 +21,15 @@ wilcox.test(transferq_kht ~ PHQ_classification, data = features)
 # p-value = 4.985e-06
 
 wilcox.test(transferq_ft ~ PHQ_classification, data = features)
-# p-value = 3.075e-10
+# p-value = 3.343e-10
 
 # VVR KHT, FT and Duration ------------------------------------------------
 
 cor(features$VVR_duration, features$VVR_median_kht)
-# Correlation coefficient = -0.1286716
+# Correlation coefficient = -0.126261
 
 cor(features$VVR_duration, features$VVR_median_ft)
-# Correlation coefficient = -0.1674709
+# Correlation coefficient = -0.1624507
 
 wilcox.test(VVR_duration ~ PHQ_classification, data=features)
 # p-value = 1.429e-07
@@ -38,7 +38,7 @@ wilcox.test(VVR_median_kht ~ PHQ_classification, data=features)
 # p-value = 0.2511
 
 wilcox.test(VVR_median_ft ~ PHQ_classification, data=features)
-# p-value = 0.01564
+# p-value = 0.01496
 
 # Behavioural KHT Change---------------------------------------------------------
 
@@ -67,7 +67,7 @@ LR_summary_ft <- read.csv("C:/Users/james/Desktop/honours/processed_data/LR_summ
 LR_summary_ft %>%
   filter(PHQ_classification == "Major Depression") %>%
   summarise(median_ft_change = median(ft_change, na.rm = TRUE))
-# Median FT change is -24.8
+# Median FT change is -24.75
 
 LR_summary_ft %>%
   filter(PHQ_classification == "Subclinical") %>%
