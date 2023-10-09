@@ -12,11 +12,25 @@ library(ranger)
 # Select significant variables 
 
 features_temp <- read.csv("C:/Users/james/Desktop/honours/processed_data/extracted_features.csv")
+demographics <- read.csv("C:/Users/james/Desktop/honours/processed_data/demographics_df.csv")
 
-features <- features_temp %>%
-  select(overall_kht, transferq_kht, transferq_ft, VVR_duration, transfer_ft, behavioural_ft, non_behavioural_kht, PHQ_classification) %>%
+demographics$Education = factor(demographics$Education, levels = c("Primary", "Secondary", "Associate or vocational education", "Bachelor", "Masters or above"))
+demographics$Employment = factor(demographics$Employment, levels = c("Unemployed", "Retired", "Student", "Self-employed", "Employed (part-time)", "Employed (full-time)"))
+
+features_temp2 <- features_temp %>%
+  select(PIN, overall_kht, overall_kht_sd, total_keypresses, transferq_kht, transferq_ft, VVR_duration, transfer_ft, behavioural_ft, non_behavioural_kht, PHQ_classification) %>%
   mutate(PHQ_classification = ifelse(PHQ_classification == "Subclinical", 0, 1)) %>%
   mutate(across(everything(), ~ replace_na(., median(., na.rm = TRUE)))) # Replacing all n/a values with the column median
+
+demographics_features <- demographics %>%
+  mutate(Education = as.numeric(Education)) %>%
+  mutate(Marital = as.numeric(as.factor(Marital))) %>%
+  mutate(Employment = as.numeric(Employment)) %>%
+  select("PIN", "Height", "Weight", "Education", "Marital", "Employment") %>%
+  mutate(across(everything(), ~ replace_na(., median(., na.rm = TRUE)))) # Replacing all n/a values with the column median
+
+features <- left_join(features_temp2, demographics_features, by = "PIN") %>%
+  select(-"PIN")
 
 data <- features %>%
   select(-PHQ_classification)
@@ -114,13 +128,14 @@ print(rf_model)
 # Best accuracy before cluster assignment = 0.732 (when min.node.size = 15)
 # Best accuracy after cluster assignment = 0.721
 # Best accuracy when scaling after assigning clusters = ~0.71
+# Best accuracy after variability, total key presses and demographics = 0.775
 
 best_rf <- ranger(
   formula = as.factor(PHQ9) ~ .,
   data = data_train,
-  mtry = 6,
+  mtry = 4,
   splitrule = "gini",
-  min.node.size = 20
+  min.node.size = 1
 )
 
 ranger_predict <- predict(best_rf, data = data_test)
@@ -131,6 +146,7 @@ confusion_matrix <- confusionMatrix(predictions, true_labels)
 print(confusion_matrix)
 # Accuracy 0.7742, sensitivity 0.8333, specificity 0.7368
 # New metrics: accuracy 0.6774, sensitivity 0.6667, specificity 0.6842
+# Newer metrics: accuracy 0.7742, sensitivity 0.75, specificity 0.7895, kappa = 0.5313
 
 # Rpart -------------------------------------------------------------------
 
@@ -155,7 +171,7 @@ rpart_model <- train(
 )
 
 print(rpart_model)
-# Best complexity = 0.3, accuracy = 0.70
+# Best complexity = 0.03, accuracy = 0.725
 
 best_rpart <- rpart_model$finalModel 
 predictions <- predict(best_rpart, newdata = data_test)
@@ -168,11 +184,13 @@ rpart_predictions <- lapply(1:nrow(predictions), function(i) {
   }
 })
 
+rpart_predictions <- unlist(rpart_predictions)
 rpart_predictions <- as.factor(rpart_predictions)
 
 confusion_matrix <- confusionMatrix(rpart_predictions, true_labels)
 print(confusion_matrix)
 # Accuracy 0.6774, sensitivity 0.6667, specificity 0.6842
+# New metrics: accuracy 0.8387, sensitivity 0.83, specificity 0.84 
 
 # KNN ---------------------------------------------------------------------
 
@@ -193,13 +211,14 @@ knn_model <- train(
 )
 
 print(knn_model)
-# k = 85, best accuracy 0.6638889
+# k = 43, best accuracy 0.7502646
 
 knn_predictions <- predict(knn_model, newdata = data_test)
 
 confusion_matrix <- confusionMatrix(knn_predictions, true_labels)
 print(confusion_matrix)
 # Accuracy = 0.6774, sensitivity 0.75, specificity 0.6316
+# New metrics: accuracy 0.8065, sensitivity 0.75, specificity 0.8421
 
 # XGBoost -----------------------------------------------------------------
 
@@ -231,4 +250,4 @@ print(xgb_model)
 xgb_predictions <- predict(xgb_model, newdata = data_test)
 confusion_matrix <- confusionMatrix(xgb_predictions, true_labels)
 print(confusion_matrix)
-# Accuracy = 0.7742, Sensitivity 0.6667, specificity 0.8421
+# Accuracy = 0.7742, Sensitivity 0.8333, specificity 0.7368, kappa = 0.5451

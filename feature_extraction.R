@@ -9,7 +9,7 @@ library(tidyr)
 complete_df_2 <- read.csv("C:/Users/james/Desktop/honours_largefiles/complete_df.csv")
 PHQ9_df <- read.csv("C:/Users/james/Desktop/honours/processed_data/PHQ9_df.csv")
 
-# Overall KHT and FT ------------------------------------------------------
+# Overall KHT, FT, SD and keypresses ------------------------------------------------------
 
 overall_df <- complete_df_2 %>%
   filter(grepl("press|release", event_type) & !grepl('mouse', event_converted)) %>%
@@ -23,7 +23,10 @@ overall_df <- complete_df_2 %>%
 overall_summary <- overall_df %>%
   group_by(PIN) %>%
   summarize(overall_kht = median(key_hold_time, na.rm = TRUE),
-            overall_ft = median(flight_time, na.rm = TRUE))
+            overall_ft = median(flight_time, na.rm = TRUE),
+            overall_kht_sd = sd(key_hold_time, na.rm = TRUE),
+            overall_ft_sd = sd(flight_time, na.rm = TRUE),
+            total_keypresses = sum(event_type == "key press"))
 
 # Transfer Q KHT and FT ---------------------------------------------------
 

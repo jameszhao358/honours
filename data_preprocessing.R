@@ -54,7 +54,7 @@ write.csv(PHQ9_df, file = "C:/Users/james/Desktop/honours/PHQ9_df.csv", row.name
 # Demographics Pre-processing ---------------------------------------------
 
 # Importing csv file into data frame named "demographics" 
-demographics <- read.csv("C:/Users/James/Desktop/honours/demographics.csv")
+demographics <- read.csv("C:/Users/James/Desktop/honours/raw_data/demographics.csv")
 
 # Homogenising variable names 
 demographics$item <- gsub("^Gender$", "1. Gender", demographics$item)
@@ -117,4 +117,7 @@ demographics2$`4a Weight(kg)` <- demographics2$`4a Weight(kg)` + (demographics2$
 demographics3 <- demographics2 %>%
   select(-"English language", -"3b. Height (feet)", -"3c. Height (inches)", -"4b Weight (lbs)", -"6. Estado civil")
 
-write.csv(demographics3, file = "C:/Users/james/Desktop/honours/demographics_df.csv", row.names = FALSE)
+new_column_names <- c("PIN", "Gender", "Age", "Height", "Weight", "Education", "Marital", "Employment", "Income")
+names(demographics3) <- new_column_names
+
+write.csv(demographics3, file = "C:/Users/james/Desktop/honours/processed_data/demographics_df.csv", row.names = FALSE)

@@ -10,75 +10,75 @@ demographics3 <- read.csv("C:/Users/james/Desktop/honours/processed_data/demogra
 # Descriptive Statistics ------------------------------------------------
 
 # Counting gender 
-gender_count <- table(demographics3$`1. Gender`)
+gender_count <- table(demographics3$Gender)
 print(gender_count)
 # Female 99 (32%), Male 209 (67.6%), Other 1 (0.3%)
 
 # Calculate age mean and sd 
-mean_age <- mean(demographics2$`2. Age (years)`, na.rm = TRUE)
-sd_age <- sd(demographics2$`2. Age (years)`)
+mean_age <- mean(demographics2$Age, na.rm = TRUE)
+sd_age <- sd(demographics2$Age)
 # mean = 35.3, sd = 9.66
 
 # Calculate height mean and sd 
-mean_height <- mean(demographics2$`3a. Height (cm)`, na.rm = TRUE)
-sd_height <- sd(demographics2$`3a. Height (cm)`, na.rm = TRUE)
+mean_height <- mean(demographics2$Height, na.rm = TRUE)
+sd_height <- sd(demographics2$Height, na.rm = TRUE)
 # mean = 169.4, sd = 12 
 
 # Calculate weight mean and sd
-mean_weight <- mean(demographics2$`4a Weight(kg)`)
-sd_weight <- sd(demographics2$`4a Weight(kg)`)
+mean_weight <- mean(demographics2$Weight)
+sd_weight <- sd(demographics2$Weight)
 # mean = 69.5, sd = 15.88
 
 # Calculate age mean and sd 
-mean_age <- mean(demographics2$`2. Age (years)`)
-sd_age <- sd(demographics2$`2. Age (years)`)
+mean_age <- mean(demographics2$Age)
+sd_age <- sd(demographics2$Age)
 # mean = 35.3, sd = 9.66
 
 # Counting education level
-education_count <- table(demographics2$`5. Education level`)
+education_count <- table(demographics2$Education)
 print(education_count)
 
 # Counting marital status 
-marital_count <- table(demographics2$`6. Marital status`)
+marital_count <- table(demographics2$Marital)
 print(marital_count)
 
 # Counting employment status 
-employment_count <- table(demographics2$`7. Employment status`)
+employment_count <- table(demographics2$Employment)
 print(employment_count)
 
 # Counting yearly income 
-income_count <- table(demographics2$`8. Gross annual household income (US dollars)`)
+income_count <- table(demographics2$Income)
 print(income_count)
 
 # Inferential Statistics --------------------------------------------------
 
-gender_table <- table(demographics3$`1. Gender`, demographics3$PHQ_classification)
+gender_table <- table(demographics3$Gender, demographics3$PHQ_classification)
 print(chisq.test(gender_table))
 # p-value = 0.4887
 
-education_table <- table(demographics3$`5. Education level`, demographics3$PHQ_classification)
+education_table <- table(demographics3$Education, demographics3$PHQ_classification)
 print(chisq.test(education_table))
 # p-value = 9.803e-09
 
-marital_table <- table(demographics3$`6. Marital status`, demographics3$PHQ_classification)
+marital_table <- table(demographics3$Marital, demographics3$PHQ_classification)
 print(chisq.test(marital_table))
 # p-value = 1.923e-08
 
-employment_table <- table(demographics3$`7. Employment status`, demographics3$PHQ_classification)
+employment_table <- table(demographics3$Employment, demographics3$PHQ_classification)
 print(chisq.test(employment_table))
 # p-value = 0.00625
 
-income_table <- table(demographics3$`8. Gross annual household income (US dollars)`, demographics3$PHQ_classification)
+income_table <- table(demographics3$Income, demographics3$PHQ_classification)
 print(chisq.test(income_table))
 # p-value = 0.371
 
-wilcox.test(`2. Age (years)` ~ PHQ_classification, data = demographics3)
+wilcox.test(Age ~ PHQ_classification, data = demographics3)
 # p-value = 0.7119
 
-wilcox.test(`3a. Height (cm)` ~ PHQ_classification, data = demographics3)
+wilcox.test(Height ~ PHQ_classification, data = demographics3)
 # p-value = 0.0002776
 
-wilcox.test(`4a Weight(kg)` ~ PHQ_classification, data = demographics3)
+wilcox.test(Weight ~ PHQ_classification, data = demographics3)
 # p-value = 0.002592
 
 # Visualisation ----------------------------------------------------------------

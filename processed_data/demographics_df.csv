@@ -1,4 +1,4 @@
-"PIN","1. Gender","2. Age (years)","3a. Height (cm)","4a Weight(kg)","5. Education level","6. Marital status","7. Employment status","8. Gross annual household income (US dollars)"
+"PIN","Gender","Age","Height","Weight","Education","Marital","Employment","Income"
 "00001_e1b1","Male",23,180,81,"Bachelor","Never married","Employed (full-time)","$25,000 - $74,999"
 "00002_e1b1","Male",46,180.34,72.57472,"Secondary","Never married","Unemployed","< $15,000"
 "00003_e1b1","Male",29,156,50,"Bachelor","Never married","Employed (full-time)","$25,000 - $74,999"

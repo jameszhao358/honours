@@ -7,13 +7,22 @@ library(tidyr)
 
 features <- read.csv("C:/Users/james/Desktop/honours/processed_data/extracted_features.csv")
 
-# Overall KHT and FT ------------------------------------------------------
+# Overall KHT, FT, variability and SD ------------------------------------------------------
 
 wilcox.test(overall_kht ~ PHQ_classification, data = features)
 # p-value = 0.003328
 
 wilcox.test(overall_ft ~ PHQ_classification, data = features)
 # p-value = 0.1112
+
+wilcox.test(overall_kht_sd ~ PHQ_classification, data = features)
+# p-value = 0.007223
+
+wilcox.test(overall_ft_sd ~ PHQ_classification, data = features)
+# p-value = 0.3521
+
+wilcox.test(total_keypresses ~ PHQ_classification, data = features)
+# p-value = 0.0005029
 
 # Transfer_q KHT and FT ---------------------------------------------------
 
