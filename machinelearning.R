@@ -8,6 +8,7 @@ library(ppclust)
 library(e1071)
 library(caret)
 library(ranger)
+library(MLeval)
 
 # Select significant variables 
 
@@ -107,9 +108,12 @@ param_grid <- expand.grid(
 )
 
 ctrl <- trainControl(
-  method = "cv",           
-  number = 10,              
-  search = "grid"
+  method = "repeatedcv",           
+  number = 3,
+  repeats = 3,
+  sampling = "up",
+  search = "grid",
+  savePredictions = TRUE
 )
   
 set.seed(123)
@@ -130,23 +134,19 @@ print(rf_model)
 # Best accuracy when scaling after assigning clusters = ~0.71
 # Best accuracy after variability, total key presses and demographics = 0.775
 
-best_rf <- ranger(
-  formula = as.factor(PHQ9) ~ .,
-  data = data_train,
-  mtry = 4,
-  splitrule = "gini",
-  min.node.size = 1
-)
-
-ranger_predict <- predict(best_rf, data = data_test)
+ranger_predict <- predict(rf_model, data = data_test)
 predictions <- ranger_predict$predictions
 true_labels = as.factor(data_test$PHQ)
 
 confusion_matrix <- confusionMatrix(predictions, true_labels)
 print(confusion_matrix)
+auc(roc(true_labels, as.numeric(predictions)))
+
 # Accuracy 0.7742, sensitivity 0.8333, specificity 0.7368
 # New metrics: accuracy 0.6774, sensitivity 0.6667, specificity 0.6842
-# Newer metrics: accuracy 0.7742, sensitivity 0.75, specificity 0.7895, kappa = 0.5313
+# Newer metrics: sensitivity 0.75, specificity 0.7895, NPV 0.8333
+
+
 
 # Rpart -------------------------------------------------------------------
 
@@ -155,9 +155,12 @@ param_grid <- expand.grid(
 )
 
 ctrl <- trainControl(
-  method = "cv",
-  number = 10,
-  search = "grid"
+  method = "repeatedcv",           
+  number = 3,
+  repeats = 3,
+  sampling = "up",
+  search = "grid",
+  savePredictions = TRUE
 )
 
 set.seed(123)
@@ -189,14 +192,19 @@ rpart_predictions <- as.factor(rpart_predictions)
 
 confusion_matrix <- confusionMatrix(rpart_predictions, true_labels)
 print(confusion_matrix)
+auc(roc(true_labels, as.numeric(rpart_predictions)))
 # Accuracy 0.6774, sensitivity 0.6667, specificity 0.6842
-# New metrics: accuracy 0.8387, sensitivity 0.83, specificity 0.84 
+# New metrics: sensitivity 0.9167, specificity 0.7895, NPV 0.9375, AUC = 0.8531
 
 # KNN ---------------------------------------------------------------------
 
 ctrl <- trainControl(
-  method = "cv",          
-  number = 10,           
+  method = "repeatedcv",           
+  number = 3,
+  repeats = 3,
+  sampling = "up",
+  search = "grid",
+  savePredictions = TRUE
 )
 
 set.seed(123)
@@ -211,14 +219,16 @@ knn_model <- train(
 )
 
 print(knn_model)
-# k = 43, best accuracy 0.7502646
+# k = 45, best accuracy 0.7502646
 
 knn_predictions <- predict(knn_model, newdata = data_test)
 
 confusion_matrix <- confusionMatrix(knn_predictions, true_labels)
 print(confusion_matrix)
+auc(roc(true_labels, as.numeric(knn_predictions)))
+
 # Accuracy = 0.6774, sensitivity 0.75, specificity 0.6316
-# New metrics: accuracy 0.8065, sensitivity 0.75, specificity 0.8421
+# New metrics: sensitivity 0.8333, specificity 0.7895, NPV = 0.8824, AUC = 0.8114
 
 # XGBoost -----------------------------------------------------------------
 
@@ -233,8 +243,12 @@ param_grid <- expand.grid(
 )
 
 ctrl <- trainControl(
-  method = "cv",
-  number = 10 
+  method = "repeatedcv",           
+  number = 3,
+  repeats = 3,
+  sampling = "up",
+  search = "grid",
+  savePredictions = TRUE
 )
 
 xgb_model <- train(
@@ -250,4 +264,6 @@ print(xgb_model)
 xgb_predictions <- predict(xgb_model, newdata = data_test)
 confusion_matrix <- confusionMatrix(xgb_predictions, true_labels)
 print(confusion_matrix)
-# Accuracy = 0.7742, Sensitivity 0.8333, specificity 0.7368, kappa = 0.5451
+auc(roc(true_labels, as.numeric(xgb_predictions)))
+
+# Sensitivity 0.75, specificity 0.8421, NPV: 0.8421, AUC = 0.7961
