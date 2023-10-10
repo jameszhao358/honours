@@ -193,6 +193,8 @@ rpart_predictions <- as.factor(rpart_predictions)
 confusion_matrix <- confusionMatrix(rpart_predictions, true_labels)
 print(confusion_matrix)
 auc(roc(true_labels, as.numeric(rpart_predictions)))
+plot(roc(true_labels, as.numeric(rpart_predictions)), main = "RPart ROC Curve", print.auc = TRUE)
+
 # Accuracy 0.6774, sensitivity 0.6667, specificity 0.6842
 # New metrics: sensitivity 0.9167, specificity 0.7895, NPV 0.9375, AUC = 0.8531
 
