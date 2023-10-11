@@ -9,6 +9,7 @@ library(e1071)
 library(caret)
 library(ranger)
 library(MLeval)
+library(pROC)
 
 # Select significant variables 
 
@@ -75,7 +76,7 @@ factoextra::fviz_cluster(list(data = data_scale, cluster = fuzzy_clusters$cluste
                          palette = "jco", 
                          ggtheme = theme_classic())
 
-# Adding cluster assignments to data_scale
+# Adding fuzzy cluster assignments to data
 data <- data %>%
   mutate(fuzzy_cluster = fuzzy_clusters$cluster)
 
@@ -134,19 +135,26 @@ print(rf_model)
 # Best accuracy when scaling after assigning clusters = ~0.71
 # Best accuracy after variability, total key presses and demographics = 0.775
 
-ranger_predict <- predict(rf_model, data = data_test)
+best_rf <- ranger(
+  formula = as.factor(PHQ9) ~ .,
+  data = data_train,
+  mtry = 6,
+  splitrule = "gini",
+  min.node.size = 20
+)
+
+ranger_predict <- predict(best_rf, data = data_test)
 predictions <- ranger_predict$predictions
 true_labels = as.factor(data_test$PHQ)
 
 confusion_matrix <- confusionMatrix(predictions, true_labels)
 print(confusion_matrix)
+
 auc(roc(true_labels, as.numeric(predictions)))
 
 # Accuracy 0.7742, sensitivity 0.8333, specificity 0.7368
 # New metrics: accuracy 0.6774, sensitivity 0.6667, specificity 0.6842
-# Newer metrics: sensitivity 0.75, specificity 0.7895, NPV 0.8333
-
-
+# Newer metrics: sensitivity 0.75, specificity 0.7895, precision 0.6923, NPV 0.8333
 
 # Rpart -------------------------------------------------------------------
 
@@ -201,7 +209,7 @@ plot(roc(true_labels, as.numeric(rpart_predictions)), main = "RPart ROC Curve", 
 # KNN ---------------------------------------------------------------------
 
 ctrl <- trainControl(
-  method = "repeatedcv",           
+  method = "repeatedcv",          
   number = 3,
   repeats = 3,
   sampling = "up",
