@@ -98,7 +98,7 @@ data_scale <- data_scale %>%
 
 set.seed(123)
 
-train_index <- sample(1:nrow(data_scale), 0.9 * nrow(data_scale))
+train_index <- sample(1:nrow(data_scale), 0.8 * nrow(data_scale))
 data_train <- data_scale[train_index, ]
 data_test <- data_scale[-train_index, ]
 
