@@ -129,32 +129,26 @@ rf_model <- train(
 
 print(rf_model)
 
-# The final values used for the model were mtry = 6, splitrule = gini and min.node.size = 20.
-# Best accuracy before cluster assignment = 0.732 (when min.node.size = 15)
-# Best accuracy after cluster assignment = 0.721
-# Best accuracy when scaling after assigning clusters = ~0.71
-# Best accuracy after variability, total key presses and demographics = 0.775
-
 best_rf <- ranger(
   formula = as.factor(PHQ9) ~ .,
   data = data_train,
-  mtry = 6,
-  splitrule = "gini",
-  min.node.size = 20
+  mtry = 4,
+  splitrule = "extratrees",
+  min.node.size = 15,
+  probability = TRUE
 )
 
-ranger_predict <- predict(best_rf, data = data_test)
-predictions <- ranger_predict$predictions
-true_labels = as.factor(data_test$PHQ)
+ranger_predict <- predict(best_rf, data = data_test, type = "response")
+predictions <- ranger_predict$predictions[, 2]
+predicted_classes <- ifelse(predictions >= 0.5, 1, 0)
 
-confusion_matrix <- confusionMatrix(predictions, true_labels)
+confusion_matrix <- confusionMatrix(as.factor(predicted_classes), true_labels)
 print(confusion_matrix)
 
-auc(roc(true_labels, as.numeric(predictions)))
-
-# Accuracy 0.7742, sensitivity 0.8333, specificity 0.7368
-# New metrics: accuracy 0.6774, sensitivity 0.6667, specificity 0.6842
-# Newer metrics: sensitivity 0.75, specificity 0.7895, precision 0.6923, NPV 0.8333
+auc(roc(as.numeric(true_labels), predictions))
+plot(roc(true_labels, predictions), 
+     main = "Random Forest ROC Curve", 
+     print.auc = TRUE)
 
 # Rpart -------------------------------------------------------------------
 
@@ -182,29 +176,16 @@ rpart_model <- train(
 )
 
 print(rpart_model)
-# Best complexity = 0.03, accuracy = 0.725
 
 best_rpart <- rpart_model$finalModel 
 predictions <- predict(best_rpart, newdata = data_test)
+predicted_classes <- ifelse(predictions[, 2] >= 0.5, 1, 0)
 
-rpart_predictions <- lapply(1:nrow(predictions), function(i) {
-  if (predictions[i, "0"] > predictions[i, "1"]) {
-    return(0)
-  } else {
-    return(1)
-  }
-})
-
-rpart_predictions <- unlist(rpart_predictions)
-rpart_predictions <- as.factor(rpart_predictions)
-
-confusion_matrix <- confusionMatrix(rpart_predictions, true_labels)
+confusion_matrix <- confusionMatrix(as.factor(predicted_classes), true_labels)
 print(confusion_matrix)
-auc(roc(true_labels, as.numeric(rpart_predictions)))
-plot(roc(true_labels, as.numeric(rpart_predictions)), main = "RPart ROC Curve", print.auc = TRUE)
 
-# Accuracy 0.6774, sensitivity 0.6667, specificity 0.6842
-# New metrics: sensitivity 0.9167, specificity 0.7895, NPV 0.9375, AUC = 0.8531
+auc(roc(true_labels, predictions[, 2]))
+# AUC = 0.78 
 
 # KNN ---------------------------------------------------------------------
 
@@ -225,20 +206,16 @@ knn_model <- train(
   method = "knn",         
   trControl = ctrl,
   metric = "Accuracy",
-  tuneGrid = data.frame(k = seq(11, 100, by = 2))   
+  tuneGrid = data.frame(k = seq(11, 100, by = 2)),
 )
 
 print(knn_model)
-# k = 45, best accuracy 0.7502646
 
 knn_predictions <- predict(knn_model, newdata = data_test)
 
 confusion_matrix <- confusionMatrix(knn_predictions, true_labels)
 print(confusion_matrix)
 auc(roc(true_labels, as.numeric(knn_predictions)))
-
-# Accuracy = 0.6774, sensitivity 0.75, specificity 0.6316
-# New metrics: sensitivity 0.8333, specificity 0.7895, NPV = 0.8824, AUC = 0.8114
 
 # XGBoost -----------------------------------------------------------------
 
@@ -266,14 +243,17 @@ xgb_model <- train(
   data = data_train,
   method = "xgbTree",
   trControl = ctrl,
-  tuneGrid = param_grid
+  tuneGrid = param_grid,
 )
 
 print(xgb_model)
 
-xgb_predictions <- predict(xgb_model, newdata = data_test)
-confusion_matrix <- confusionMatrix(xgb_predictions, true_labels)
-print(confusion_matrix)
-auc(roc(true_labels, as.numeric(xgb_predictions)))
+xgb_predictions <- predict(xgb_model, newdata = data_test, type = "prob")
+xgb_predicted_class <- ifelse(xgb_predictions[, 2] >= 0.5, 1, 0)
 
-# Sensitivity 0.75, specificity 0.8421, NPV: 0.8421, AUC = 0.7961
+confusion_matrix <- confusionMatrix(as.factor(xgb_predicted_class), true_labels)
+print(confusion_matrix)
+auc(roc(true_labels, xgb_predictions[,2]))
+plot(roc(true_labels, xgb_predictions[,2]), 
+     main = "XGBoost ROC Curve", 
+     print.auc = TRUE)
