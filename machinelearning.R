@@ -39,11 +39,11 @@ data <- features %>%
 
 data_scale <- as.data.frame(scale(data))
 
+# K-means Clustering ------------------------------------------------------
+
 # Elbow plot to determine optimal number of clusters for k-means clustering
 fviz_nbclust(data_scale, kmeans, method = "wss") +
   labs(subtitle = "Elbow method")
-
-# K-means 
 
 km.out <- kmeans(data_scale, centers = 3, nstart = 100)
 km.clusters <- km.out$cluster
@@ -52,7 +52,7 @@ print(km.clusters)
 data <- data %>%
   mutate(kmeans = km.clusters)
 
-# DBSCAN clustering 
+# DBSCAN Clustering -------------------------------------------------------
 
 # Finding optimal epsilon using elbow plot
 kNNdistplot(data_scale, minPts = 7)
@@ -65,7 +65,7 @@ plot(data_scale, col = dbscan_res$cluster+1, main = "DBSCAN")
 data <- data %>%
   mutate(dbscan = dbscan_res$cluster)
 
-# Fuzzy clustering
+# Fuzzy Clustering --------------------------------------------------------
 
 fuzzy_clusters <- fcm(data_scale, centers = 3)
 
@@ -102,6 +102,8 @@ train_index <- sample(1:nrow(data_scale), 0.8 * nrow(data_scale))
 data_train <- data_scale[train_index, ]
 data_test <- data_scale[-train_index, ]
 
+levels(data_train$PHQ9) <- c("Subclinical", "Clinical")
+
 param_grid <- expand.grid(
   mtry = c(2, 4, 6),
   splitrule = c("gini", "extratrees"),
@@ -114,8 +116,10 @@ ctrl <- trainControl(
   repeats = 3,
   sampling = "up",
   search = "grid",
-  savePredictions = TRUE
-)
+  savePredictions = TRUE,
+  summaryFunction = twoClassSummary,
+  classProbs = TRUE
+  )
   
 set.seed(123)
 
@@ -124,7 +128,8 @@ rf_model <- train(
   data = data_train,
   method = "ranger",
   trControl = ctrl,         
-  tuneGrid = param_grid
+  tuneGrid = param_grid,
+  metric = "ROC"
 )
 
 print(rf_model)
@@ -132,8 +137,8 @@ print(rf_model)
 best_rf <- ranger(
   formula = as.factor(PHQ9) ~ .,
   data = data_train,
-  mtry = 4,
-  splitrule = "extratrees",
+  mtry = 2,
+  splitrule = "gini",
   min.node.size = 15,
   probability = TRUE
 )
@@ -162,7 +167,9 @@ ctrl <- trainControl(
   repeats = 3,
   sampling = "up",
   search = "grid",
-  savePredictions = TRUE
+  savePredictions = TRUE,
+  summaryFunction = twoClassSummary,
+  classProbs = TRUE
 )
 
 set.seed(123)
@@ -172,7 +179,8 @@ rpart_model <- train(
   data = data_train,
   method = "rpart",        
   trControl = ctrl,
-  tuneGrid = param_grid    
+  tuneGrid = param_grid,
+  metric = "ROC"
 )
 
 print(rpart_model)
@@ -190,12 +198,12 @@ auc(roc(true_labels, predictions[, 2]))
 # KNN ---------------------------------------------------------------------
 
 ctrl <- trainControl(
-  method = "repeatedcv",          
+  method = "repeatedcv",           
   number = 3,
   repeats = 3,
   sampling = "up",
   search = "grid",
-  savePredictions = TRUE
+  savePredictions = TRUE,
 )
 
 set.seed(123)
@@ -212,6 +220,7 @@ knn_model <- train(
 print(knn_model)
 
 knn_predictions <- predict(knn_model, newdata = data_test)
+knn_predictions <- as.factor(ifelse(knn_predictions == "Subclinical", 0, 1))
 
 confusion_matrix <- confusionMatrix(knn_predictions, true_labels)
 print(confusion_matrix)
@@ -235,7 +244,9 @@ ctrl <- trainControl(
   repeats = 3,
   sampling = "up",
   search = "grid",
-  savePredictions = TRUE
+  savePredictions = TRUE,
+  summaryFunction = twoClassSummary,
+  classProbs = TRUE 
 )
 
 xgb_model <- train(
@@ -244,6 +255,7 @@ xgb_model <- train(
   method = "xgbTree",
   trControl = ctrl,
   tuneGrid = param_grid,
+  metric = "ROC"
 )
 
 print(xgb_model)
@@ -257,3 +269,17 @@ auc(roc(true_labels, xgb_predictions[,2]))
 plot(roc(true_labels, xgb_predictions[,2]), 
      main = "XGBoost ROC Curve", 
      print.auc = TRUE)
+
+# Variable Importance Graph -----------------------------------------------
+
+importance_matrix <- xgb.importance(model = xgb_model$finalModel)
+
+new_labels <- c("Fuzzy Clusters", "Transferq Latency", "Total Keypresses", 
+                "Non-behavioural Hold-time", "VVR Duration", "Behavioural Latency", 
+                "Overall Hold-time Variability", "Overall Hold-time")
+
+importance_matrix$Feature[1:8] <- new_labels
+
+xgb.plot.importance(importance_matrix,
+                    top_n = 8,
+                    )
