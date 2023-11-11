@@ -7,6 +7,35 @@ library(tidyr)
 
 features <- read.csv("C:/Users/james/Desktop/honours/processed_data/extracted_features.csv")
 
+# Overall summary table 
+
+custom_summary <- function(data, feature, PHQ) {
+  result_table <- data %>%
+    group_by({{ PHQ }}) %>%
+    summarise(
+      median = median({{ feature }}, na.rm = TRUE),
+      sd = sd({{ feature }}, na.rm = TRUE)
+    )
+  return(as.data.frame(result_table))
+}
+
+custom_summary(features, transfer_ft, PHQ_classification)
+custom_summary(features, transfer_kht, PHQ_classification)
+custom_summary(features, non_behavioural_kht, PHQ_classification)
+custom_summary(features, VVR_duration, PHQ_classification)
+custom_summary(features, behavioural_kht, PHQ_classification)
+custom_summary(features, behavioural_ft, PHQ_classification)
+custom_summary(features, VVR_median_kht, PHQ_classification)
+custom_summary(features, VVR_median_ft, PHQ_classification)  
+custom_summary(features, transferq_ft, PHQ_classification)
+custom_summary(features, transferq_kht, PHQ_classification)
+custom_summary(features, total_keypresses, PHQ_classification)
+custom_summary(features, overall_kht, PHQ_classification)
+custom_summary(features, overall_kht_sd, PHQ_classification)
+custom_summary(features, overall_ft, PHQ_classification)
+custom_summary(features, overall_ft_sd, PHQ_classification)
+custom_summary(features, total_keypresses, PHQ_classification)
+
 # Overall KHT, FT, variability and SD ------------------------------------------------------
 
 wilcox.test(overall_kht ~ PHQ_classification, data = features)
@@ -91,6 +120,9 @@ t.test(LR_summary_ft$VVR1, LR_summary_ft$deval_test)
 
 wilcox.test(behavioural_ft ~ PHQ_classification, data = features)
 # p-value = 0.0001606
+
+wilcox.test(behavioural_kht ~ PHQ_classification, data = features)
+# p-value = 0.1103
 
 cor(features$behavioural_kht, features$behavioural_ft)
 # Correlation coefficient = 0.25

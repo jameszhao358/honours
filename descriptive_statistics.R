@@ -7,48 +7,81 @@ library(dplyr)
 
 demographics3 <- read.csv("C:/Users/james/Desktop/honours/processed_data/demographics_df.csv")
 
+# Read PHQ9 data 
+
+PHQ9_df <- read.csv("C:/Users/james/Desktop/honours/processed_data/PHQ9_df.csv")
+
+demographics3 <- left_join(demographics3, PHQ9_df, by = "PIN")
+
+
 # Descriptive Statistics ------------------------------------------------
 
-# Counting gender 
+table(demographics3$PHQ_classification)
+
+# Drop na value
+demographics3 <- demographics3 %>%
+  filter(!is.na(PHQ_classification))
+
+# Overall gender 
 gender_count <- table(demographics3$Gender)
 print(gender_count)
 # Female 99 (32%), Male 209 (67.6%), Other 1 (0.3%)
 
+# Gender by PHQ9 
+gender_count2 <- with(demographics3, table(Gender, PHQ_classification))
+print(gender_count2)
+
 # Calculate age mean and sd 
-mean_age <- mean(demographics2$Age, na.rm = TRUE)
-sd_age <- sd(demographics2$Age)
+mean_age <- mean(demographics3$Age, na.rm = TRUE)
+sd_age <- sd(demographics3$Age)
 # mean = 35.3, sd = 9.66
+
+age_count <- aggregate(Age ~ PHQ_classification, data = demographics3, mean)
+
+age_count <- demographics3 %>%
+  group_by(PHQ_classification) %>%
+  summarise(Mean = mean(Age), SD = sd(Age))
+
+print(result)
 
 # Calculate height mean and sd 
 mean_height <- mean(demographics2$Height, na.rm = TRUE)
 sd_height <- sd(demographics2$Height, na.rm = TRUE)
 # mean = 169.4, sd = 12 
 
+height_count <- demographics3 %>%
+  group_by(PHQ_classification) %>%
+  summarise(Mean = mean(Height, na.rm = TRUE), SD = sd(Height, na.rm = TRUE))
+
 # Calculate weight mean and sd
 mean_weight <- mean(demographics2$Weight)
 sd_weight <- sd(demographics2$Weight)
 # mean = 69.5, sd = 15.88
 
-# Calculate age mean and sd 
-mean_age <- mean(demographics2$Age)
-sd_age <- sd(demographics2$Age)
-# mean = 35.3, sd = 9.66
+weight_count <- demographics3 %>%
+  group_by(PHQ_classification) %>%
+  summarise(Mean = mean(Weight, na.rm = TRUE), SD = sd(Weight, na.rm = TRUE))
+
 
 # Counting education level
-education_count <- table(demographics2$Education)
+education_count <- table(demographics3$Education)
+print(education_count)
+
+education_count <- with(demographics3, table(Education, PHQ_classification))
 print(education_count)
 
 # Counting marital status 
-marital_count <- table(demographics2$Marital)
+marital_count <- with(demographics3, table(Marital, PHQ_classification))
 print(marital_count)
 
 # Counting employment status 
-employment_count <- table(demographics2$Employment)
+employment_count <- with(demographics3, table(Employment, PHQ_classification))
 print(employment_count)
 
 # Counting yearly income 
-income_count <- table(demographics2$Income)
+income_count <- with(demographics3, table(Income, PHQ_classification))
 print(income_count)
+
 
 # Inferential Statistics --------------------------------------------------
 
