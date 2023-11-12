@@ -52,6 +52,14 @@ print(km.clusters)
 data <- data %>%
   mutate(kmeans = km.clusters)
 
+fviz_nbclust(data_scale, kmeans, method = "silhouette", k.max = 24) + 
+             theme_minimal() + 
+             ggtitle("The Silhouette Plot")
+
+fviz_cluster(km.out, data_scale,
+             geom = "point",
+             main = "K-means Clustering")
+
 # DBSCAN Clustering -------------------------------------------------------
 
 # Finding optimal epsilon using elbow plot
@@ -67,7 +75,7 @@ data <- data %>%
 
 # Fuzzy Clustering --------------------------------------------------------
 
-fuzzy_clusters <- fcm(data_scale, centers = 3)
+fuzzy_clusters <- fcm(data_scale, centers = 2)
 
 factoextra::fviz_cluster(list(data = data_scale, cluster = fuzzy_clusters$cluster),  
                          geom = "point", 
@@ -102,7 +110,11 @@ train_index <- sample(1:nrow(data_scale), 0.8 * nrow(data_scale))
 data_train <- data_scale[train_index, ]
 data_test <- data_scale[-train_index, ]
 
+data_train$PHQ9 <- as.factor(data_train$PHQ9)
 levels(data_train$PHQ9) <- c("Subclinical", "Clinical")
+
+str(data_train$PHQ9)
+
 
 param_grid <- expand.grid(
   mtry = c(2, 4, 6),
@@ -146,6 +158,8 @@ best_rf <- ranger(
 ranger_predict <- predict(best_rf, data = data_test, type = "response")
 predictions <- ranger_predict$predictions[, 2]
 predicted_classes <- ifelse(predictions >= 0.5, 1, 0)
+
+true_labels <- as.factor(data_test$PHQ9)
 
 confusion_matrix <- confusionMatrix(as.factor(predicted_classes), true_labels)
 print(confusion_matrix)
